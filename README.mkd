@@ -1,0 +1,26 @@
+EJqCalculator 
+-------------
+Yii framework extension to support jquery jq-calculator plugin.
+@author Dimitrios Mengidis <tydeas.dr@gmail.com>
+@version 0.1
+
+###Use
+~~~
+[php]
+ <div>name="left[0]"</div><input name="left[0]">
+ <div>name="right[0]"</div><input name="right[0]" class=""> 
+ <div>id="sum:0" / name="sum[0]"</div><input name="sum[0]" id="sum" class="">
+ <?php 
+     $this->widget('application.extensions.EJqCalculator.EJqCalculator', array(
+     'addFormula'=>'{{left[0]}} + {{right[0]}}',
+     'selector'=>'#sum',
+ ));?>
+~~~
+
+###Resources
+- [jq calculator homepage](http://jq-calculator.sourceforge.net/)
+- [github repository](http://www.github.com/dmtrs/EJqCalculator)
+
+###Changelog
+####Version 0.1
+- Initial release.
