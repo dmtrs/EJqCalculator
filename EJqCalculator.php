@@ -7,43 +7,125 @@
  * ###Use
  * ~~~
  * [php]
- *  <div>name="left[0]"</div><input name="left[0]">
- *  <div>name="right[0]"</div><input name="right[0]" class=""> 
- *  <div>id="sum:0" / name="sum[0]"</div><input name="sum[0]" id="sum" class="">
- *  <?php 
- *      $this->widget('application.extensions.EJqCalculator.EJqCalculator', array(
- *      'addFormula'=>'{{left[0]}} + {{right[0]}}',
- *      'selector'=>'#sum',
- *  ));?>
+ *
+ * <table>
+ * 	<tr>
+ * 		<td>
+ * 			<input type="text" name='l[0]'/>
+ * 		</td>
+ * 		<td>
+ * 			<input type="text" name='r[0]'/>
+ * 		</td>
+ *		<td>
+ *			<input type="text" id='sum0' />
+ *		</td>
+ *	</tr>
+ *	<tr>
+ *		<td>
+ *			<input type="text" name='l[1]'/>
+ *		</td>
+ *		<td>
+ *			<input type="text" name='r[1]' />
+ *		</td>
+ *		<td>
+ *			<input type="text" id='sum1' />
+ *		</td>
+ *	</tr>
+ *	<tr>
+ *		<th colspan='2'>
+ *          Total Sum
+ *		</th>
+ *		<td>
+ *			<input type="text" id='total'/>
+ * 		</td>
+ *	</tr>
+ * </table>
+ *
+ * <?php $this->widget('application.extensions.EJqCalculator.EJqCalculator', array(
+ *    'addFormula'=>array(
+ *        '#sum0'=>'{{l[0]}} * {{r[0]}}',
+ *        '#sum1'=>'{{l[1]}} * {{r[1]}}',
+ *        '#total'=>'{{#sum0}} + {{#sum1}}'
+ *    ),
+ * ));?>
  * ~~~
  *
  * ###Resources
- * - [jq calculator homepage](http://jq-calculator.sourceforge.net/)
- * - [github repository](http://www.github.com/dmtrs/...)
+ * - [Jq calculator homepage](http://jq-calculator.sourceforge.net/)
+ * - [Github repository](http://www.github.com/dmtrs/...)
+ * - [Extension site](http://www.yiiframework.cok/extensions/ejqcalculator/)
  *
  * ###Changelog
+ * ####Version 0.1.1
+ * - Documentation added.
+ * - Change of the properties passed to widget structure.
  * ####Version 0.1
  * - Initial release.
  *
  * @author Dimitrios Mengidis <tydeas.dr@gmail.com>
- * @version 0.1
+ * @version 0.1.1
  **/
 class EJqCalculator extends CWidget
 {
-    public $addFormula = null;
+    /**
+     * @var array selector=>formula paired array.
+     * @see EJqCalculater::addFormula
+     * @since 0.1
+     */
+    public $addFormula;
+    /**
+     * @var array
+     * @since 0.1.1
+     */
+    public $aggregate;
+    /**
+     * @var array
+     * @since 0.1.1
+     */
+    public $aggregateTo;
+    /**
+     * @var string
+     * @since 0.1
+     */
     public $selector = null;
-
+    /**
+     * @var integer the position of the script registration.
+     * @see CClientScript::registerScript
+     * @since 0.1.1
+     */
     public $position = CClientScript::POS_READY;
-    
+    /**
+     * @var array all available jq-calculator libraries.
+     * @link http://jq-calculator.sourceforge.net/
+     * @since 0.1
+     */
     private $jsFiles = array(
         'jq-calc.js',
         'jq-calc-ext.js',
         'jq-calc-formula-tracker.js',);
-    
+    /**
+     * @var string the folder containt the jq-calculator libraries.
+     * @since 0.1
+     */
     private $jsPath = "js";
-
+    /**
+     * @var array all availabe functions.
+     * @since 0.1.1
+     */
+    private $functions = array(
+        'addFormula', 'aggregate', 'aggregateTo',
+    );
+    /**
+     * @var CClientScript he CClientScript object for the registered libarries.
+     * @see CClientScript::registerScriptFile
+     * @since 0.1
+     */
     private $js = null;
-    
+    /** 
+     * Register all the required libraries for the jq-calculator plugin. 
+     *
+     * @since 0.1
+     **/
     private function registerLibraries()
     {
         $cs = Yii::app()->clientScript;
@@ -57,14 +139,16 @@ class EJqCalculator extends CWidget
             $jsAssetPath = Yii::app()->getAssetManager()->publish($jsPath);
             foreach($this->jsFiles as $file)
             {
-                $cs->registerScriptFile($jsAssetPath.DIRECTORY_SEPARATOR.$file, CClientScript::POS_HEAD);
+                $this->js = $cs->registerScriptFile($jsAssetPath.DIRECTORY_SEPARATOR.$file, CClientScript::POS_HEAD);
             }
         }
     }
-    private function registerScript($script)
-    {      
-        Yii::app()->clientScript->registerScript($this->id.'-jsscript', $script, $this->position);
-    }
+    /** 
+     * Initialization of the widget. Register the libraries of the plugin.
+     *
+     * @see EJqCalculator::registerLibraries
+     * @since 0.1
+     */
     public function init()
     {    
         $this->registerLibraries();
@@ -72,7 +156,39 @@ class EJqCalculator extends CWidget
     }
     public function run()
     {
-        $script = "$('".$this->selector."').addFormula('".$this->addFormula."');";
-        $this->registerScript($script);
+        $script = '';
+        foreach($this->functions as $f)
+        {
+            if(isset($this->$f)) 
+                $script .= $this->$f();
+        }
+        if(!empty($script))
+            $this->registerScript($script);
+    }
+    /**
+     * Generate js script code using the addFormula method.
+     *
+     * @link http://jq-calculator.sourceforge.net/#Plugin_Calculator_API_addFormula_method
+     * @return string 
+     * @since 0.1.1
+     **/
+    private function addFormula()
+    {
+        $s = '';
+        foreach($this->addFormula as $selector=>$formula)
+        {
+            $s .= "$('".$selector."').addFormula('".$formula."');\n";
+        }
+        return $s;
+    }
+    /**
+     * Register the js script generated from the available functions.
+     * 
+     * @see EJqCalculator::$functions
+     * @since 0.1
+     */
+    private function registerScript($script)
+    {      
+        Yii::app()->clientScript->registerScript($this->id.'-jsscript', $script, $this->position);
     }
 }
