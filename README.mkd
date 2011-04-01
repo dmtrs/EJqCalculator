@@ -1,26 +1,69 @@
 EJqCalculator 
 -------------
-Yii framework extension to support jquery jq-calculator plugin.
-@author Dimitrios Mengidis <tydeas.dr@gmail.com>
-@version 0.1
+Extensions for the yii framework to support jquery jq-calculator plugin.
+
+- author Dimitrios Mengidis <tydeas.dr@gmail.com>
+- version 0.1.1
+
+###Jquery plugin
+- JQ-Calculator formula track.
+- 2011 Andreas Geissel.
+
+"Sometimes the fields of a form are part of a chain of a calculation. For example, when the price of an order position changes, its price including tax should be recalculated. Then the total price (including other additional costs) should also be updated. This means each input element (text, select box, ...) needs an onChange (or onBlur) function that recalculates the new results and triggers other (dependent) fields to update themselves."
 
 ###Use
-~~~
-[php]
- <div>name="left[0]"</div><input name="left[0]">
- <div>name="right[0]"</div><input name="right[0]" class=""> 
- <div>id="sum:0" / name="sum[0]"</div><input name="sum[0]" id="sum" class="">
- <?php 
-     $this->widget('application.extensions.EJqCalculator.EJqCalculator', array(
-     'addFormula'=>'{{left[0]}} + {{right[0]}}',
-     'selector'=>'#sum',
- ));?>
-~~~
+Add this to your view:
+
+    <table>
+	    <tr>
+		    <td>
+			    <input type="text" name='l[0]'/>
+    		</td>
+	    	<td>
+		    	<input type="text" name='r[0]'/>
+    		</td>
+ 	    	<td>
+ 		    	<input type="text" id='sum0' />
+     		</td>
+    	</tr>
+    	<tr>
+    		<td>
+    			<input type="text" name='l[1]'/>
+    		</td>
+    		<td>
+    			<input type="text" name='r[1]' />
+    		</td>
+    		<td>
+    			<input type="text" id='sum1' />
+    		</td>
+    	</tr>
+    	<tr>
+    		<th colspan='2'>
+          Total Sum
+    		</th>
+    		<td>
+    			<input type="text" id='total'/>
+    		</td>
+    	</tr>
+    </table>
+
+    <?php $this->widget('application.extensions.EJqCalculator.EJqCalculator', array(
+       'addFormula'=>array(
+           '#sum0'=>'{{l[0]}} * {{r[0]}}',
+            '#sum1'=>'{{l[1]}} * {{r[1]}}',
+           '#total'=>'{{#sum0}} + {{#sum1}}'
+       ),
+    ));?>
+
 
 ###Resources
-- [jq calculator homepage](http://jq-calculator.sourceforge.net/)
-- [github repository](http://www.github.com/dmtrs/EJqCalculator)
+- [Jq calculator homepage](http://jq-calculator.sourceforge.net/)
+- [Github repository](https://github.com/dmtrs/EJqCalculator)
+- [Extension site](http://www.yiiframework.cok/extensions/ejqcalculator/)
 
 ###Changelog
+####Version 0.1.1
+- Documentation added.
+- Change of the properties passed to widget structure.
 ####Version 0.1
 - Initial release.
