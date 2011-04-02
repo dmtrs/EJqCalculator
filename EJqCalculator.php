@@ -74,6 +74,17 @@ class EJqCalculator extends CWidget
      */
     public $addFormula;
     /**
+     * @var array 
+     * @see EJqCalculater::setFormulae
+     * @since 0.1.2
+     */
+    public $setFormulae;
+    /**
+     * @
+     * @since 0.1.2
+     */
+    public $withAggregatorFunctions;
+    /**
      * @var array
      * @since 0.1.1
      */
@@ -101,7 +112,6 @@ class EJqCalculator extends CWidget
      */
     private $jsFiles = array(
         'jq-calc.js',
-        'jq-calc-ext.js',
         'jq-calc-formula-tracker.js',);
     /**
      * @var string the folder containt the jq-calculator libraries.
@@ -113,14 +123,15 @@ class EJqCalculator extends CWidget
      * @since 0.1.1
      */
     private $functions = array(
-        'addFormula', 'aggregate', 'aggregateTo',
+        'addFormula', 'aggregate', 'aggregateTo','setFormulae','withAggregatorFunctions',
     );
+//TODO: Remove this comments
     /**
      * @var CClientScript he CClientScript object for the registered libarries.
      * @see CClientScript::registerScriptFile
      * @since 0.1
      */
-    private $js = null;
+//    private $js = null;
     /** 
      * Register all the required libraries for the jq-calculator plugin. 
      *
@@ -133,15 +144,17 @@ class EJqCalculator extends CWidget
         if(!$cs->isScriptRegistered('jquery')) {
             $cs->registerCoreScript('jquery');
         }
-        if($this->js===null) {
-            $jsPath = dirname(__FILE__).DIRECTORY_SEPARATOR.$this->jsPath.DIRECTORY_SEPARATOR;
-
-            $jsAssetPath = Yii::app()->getAssetManager()->publish($jsPath);
-            foreach($this->jsFiles as $file)
-            {
-                $this->js = $cs->registerScriptFile($jsAssetPath.DIRECTORY_SEPARATOR.$file, CClientScript::POS_HEAD);
-            }
+//        if($this->js===null) {
+        $jsPath = dirname(__FILE__).DIRECTORY_SEPARATOR.$this->jsPath.DIRECTORY_SEPARATOR;
+        $jsAssetPath = Yii::app()->getAssetManager()->publish($jsPath);
+        foreach($this->jsFiles as $file)
+        {
+            $cs->registerScriptFile($jsAssetPath.DIRECTORY_SEPARATOR.$file, CClientScript::POS_HEAD);
         }
+        if (isset($this->setFormulae) || isset($this->withAggregatorFunctions)) {
+            $cs->registerScriptFile($jsAssetPath.DIRECTORY_SEPARATOR.'jq-calc-ext.js', CClientScript::POS_HEAD);
+        }
+
     }
     /** 
      * Initialization of the widget. Register the libraries of the plugin.
@@ -166,6 +179,16 @@ class EJqCalculator extends CWidget
             $this->registerScript($script);
     }
     /**
+     * Register the js script generated from the available functions.
+     * 
+     * @see EJqCalculator::$functions
+     * @since 0.1
+     */
+    private function registerScript($script)
+    {      
+        Yii::app()->clientScript->registerScript($this->id.'-jsscript', $script, $this->position);
+    }
+    /**
      * Generate js script code using the addFormula method.
      *
      * @link http://jq-calculator.sourceforge.net/#Plugin_Calculator_API_addFormula_method
@@ -181,14 +204,34 @@ class EJqCalculator extends CWidget
         }
         return $s;
     }
-    /**
-     * Register the js script generated from the available functions.
-     * 
-     * @see EJqCalculator::$functions
-     * @since 0.1
-     */
-    private function registerScript($script)
-    {      
-        Yii::app()->clientScript->registerScript($this->id.'-jsscript', $script, $this->position);
+    //There could be possible bugs here. really :)
+    private function setFormulae()
+    {
+        $s = '';
+        $param1 = 'mySet';
+        $param2 = '';
+        if(isset($this->setFormulae['set'])) {
+            if(is_array($this->setFormulae['set'])) {
+                $s .= "var ".$param1." = ".CJSON::encode($this->setFormulae['set']).";\n";
+            } else if(is_string($this->setFormulae['set'])) {
+                $param1 = $this->setFormulae['set'];
+            } else {
+                throw new CException('Add setFormulae can be either an array or a string');
+            }
+        } else {
+            throw new CException('setFormulae[set] must be set.');
+        }
+        if(isset($this->setFormulae['replace'])) {
+            if(isset($this->setFormulae['with'])) {
+                if(is_array($this->setFormulae['with'])) {
+                    $param2 = ", '".$this->setFormulae['replace']."', ".CJSON::encode($this->setFormulae['with']);
+                } else if(is_string($this->setFormulae['with'])) {
+                    $param2 = ", '".$this->setFormulae['replace']."', ".$this->setFormulae['with'];
+               }
+            }
+        }
+        $s .= "$.setFormulae(".$param1.$param2.");";
+        return $s;
+
     }
 }
