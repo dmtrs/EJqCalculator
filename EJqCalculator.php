@@ -54,6 +54,7 @@
  * - [Jq calculator homepage](http://jq-calculator.sourceforge.net/)
  * - [Github repository](http://www.github.com/dmtrs/...)
  * - [Extension site](http://www.yiiframework.cok/extensions/ejqcalculator/)
+ * - [EJqCalculator demo](http://dmtrs.devio.us/blog/index.php/ejqcalculator)
  *
  * ###Changelog
  * ####Version 0.1.1
